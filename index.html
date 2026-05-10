@@ -1727,7 +1727,6 @@ function removeFromWatchlist(ticker, event) {
 }
 
 // Init
-const sb = window._sb || { auth: { signInWithPassword: ()=>{}, signUp: ()=>{}, signOut: ()=>{}, signInWithOAuth: ()=>{} }, from: ()=>({ select: ()=>({ eq: ()=>({}) }), upsert: ()=>{}, delete: ()=>({ eq: ()=>({ eq: ()=>{} }) }) } }; // replaced by initSupabase
 let currentUser = null;
 
 // AUTH FUNCTIONS
