@@ -1133,6 +1133,36 @@
 </div>
 
 <script>
+function initSupabase() {
+  if (!window.supabase) { console.error('Supabase not loaded'); return; }
+  const sb = window.supabase.createClient(
+    'https://iokxmcizklrikljxjsyd.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlva3htY2l6a2xyaWtsanhqc3lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NDA3ODIsImV4cCI6MjA5NDAxNjc4Mn0.LNT-9VkyKBnG3SSgaj1w5y2Fq1ddAfler488AR0bYeA'
+  );
+  window._sb = sb;
+
+  sb.auth.onAuthStateChange((_event, session) => {
+    console.log('Auth event:', _event, session?.user?.email);
+    if (session?.user) {
+      if (typeof onSignedIn === 'function') onSignedIn(session.user);
+    } else if (_event === 'SIGNED_OUT') {
+      location.reload();
+    }
+  });
+
+  sb.auth.getSession().then(({ data, error }) => {
+    console.log('getSession:', data?.session?.user?.email, error);
+    if (data?.session?.user) {
+      if (typeof onSignedIn === 'function') onSignedIn(data.session.user);
+    } else {
+      const overlay = document.getElementById('authOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    }
+  });
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js" onload="initSupabase()" onerror="console.error('Supabase CDN failed')"></script>
+<script>
 const QUOTES = [
   '"Price is what you pay. Value is what you get." — Warren Buffett',
   '"It\'s far better to buy a wonderful company at a fair price than a fair company at a wonderful price." — Warren Buffett',
@@ -1697,7 +1727,7 @@ function removeFromWatchlist(ticker, event) {
 }
 
 // Init
-const sb = window.supabase.createClient('https://iokxmcizklrikljxjsyd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlva3htY2l6a2xyaWtsanhqc3lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NDA3ODIsImV4cCI6MjA5NDAxNjc4Mn0.LNT-9VkyKBnG3SSgaj1w5y2Fq1ddAfler488AR0bYeA');
+const sb = window._sb || { auth: { signInWithPassword: ()=>{}, signUp: ()=>{}, signOut: ()=>{}, signInWithOAuth: ()=>{} }, from: ()=>({ select: ()=>({ eq: ()=>({}) }), upsert: ()=>{}, delete: ()=>({ eq: ()=>({ eq: ()=>{} }) }) } }; // replaced by initSupabase
 let currentUser = null;
 
 // AUTH FUNCTIONS
@@ -1720,8 +1750,8 @@ async function submitAuth() {
   btn.textContent = 'Please wait...';
 
   const { data, error } = isSignin
-    ? await sb.auth.signInWithPassword({ email, password })
-    : await sb.auth.signUp({ email, password });
+    ? await window._sb.auth.signInWithPassword({ email, password })
+    : await window._sb.auth.signUp({ email, password });
 
   if (error) {
     msg.innerHTML = `<div class="auth-error">${error.message}</div>`;
@@ -1765,13 +1795,13 @@ function onSignedIn(user) {
 }
 
 async function signOut() {
-  await sb.auth.signOut();
+  await window._sb.auth.signOut();
   currentUser = null;
   location.reload();
 }
 
 async function signInWithGoogle() {
-  const { error } = await sb.auth.signInWithOAuth({
+  const { error } = await window._sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: window.location.origin
@@ -1784,7 +1814,7 @@ async function signInWithGoogle() {
 
 async function loadUserWatchlist() {
   if (!currentUser) return;
-  const { data, error } = await sb.from('watchlist').select('*').eq('user_id', currentUser.id);
+  const { data, error } = await window._sb.from('watchlist').select('*').eq('user_id', currentUser.id);
   console.log('Loaded watchlist from Supabase:', data, error);
   if (data && data.length) {
     data.forEach(row => {
@@ -1807,7 +1837,7 @@ async function loadUserWatchlist() {
 
 async function saveToSupabase(ticker, data, entry) {
   if (!currentUser) return;
-  await sb.from('watchlist').upsert({
+  await window._sb.from('watchlist').upsert({
     user_id: currentUser.id,
     ticker: ticker,
     data: { ...entry, fullData: data }
@@ -1816,42 +1846,10 @@ async function saveToSupabase(ticker, data, entry) {
 
 async function removeFromSupabase(ticker) {
   if (!currentUser) return;
-  await sb.from('watchlist').delete().eq('user_id', currentUser.id).eq('ticker', ticker);
+  await window._sb.from('watchlist').delete().eq('user_id', currentUser.id).eq('ticker', ticker);
 }
 
-// Auth state listener — fires on login, logout, token refresh
-sb.auth.onAuthStateChange((_event, session) => {
-  console.log('Auth event:', _event, session?.user?.email);
-  if (_event === 'SIGNED_IN' && session?.user) {
-    onSignedIn(session.user);
-  } else if (_event === 'SIGNED_OUT') {
-    location.reload();
-  }
-});
-
-// On page load — check for existing session or OAuth redirect
-window.addEventListener('load', async () => {
-  // Handle OAuth redirect (access_token in URL hash)
-  if (window.location.hash.includes('access_token')) {
-    const { data, error } = await sb.auth.getSession();
-    if (data?.session?.user) {
-      onSignedIn(data.session.user);
-      // Clean URL
-      history.replaceState(null, '', window.location.pathname);
-      return;
-    }
-  }
-
-  // Check for existing session
-  const { data: { session } } = await sb.auth.getSession();
-  console.log('Session on load:', session?.user?.email);
-  if (session?.user) {
-    onSignedIn(session.user);
-  } else {
-    const overlay = document.getElementById('authOverlay');
-    if (overlay) overlay.style.display = 'flex';
-  }
-});
+// Auth handled by initSupabase() above
 
 renderWatchlist();
 document.getElementById('tickerInput').addEventListener('keydown', e => {
