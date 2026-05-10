@@ -1045,7 +1045,7 @@ async function callClaude(prompt) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
+      max_tokens: 2500,
       system: 'You are a financial analyst. Output ONLY raw JSON. No ```json, no ```, no markdown, no explanation. First character must be { and last character must be }.',
       messages: [{ role: 'user', content: prompt }]
     })
