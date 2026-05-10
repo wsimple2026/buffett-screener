@@ -1081,7 +1081,7 @@ async function callClaude(prompt) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': CONFIG.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       max_tokens: 4000,
       system: 'You are a financial analyst. Respond with ONLY a single valid JSON object — no markdown fences, no preamble, no explanation, no text before or after. Start with { and end with }. Never truncate.',
       messages: [{ role: 'user', content: prompt }]
@@ -1393,7 +1393,7 @@ async function askQuestion(question) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 400,
         system: systemPrompt,
         messages: qaHistory
