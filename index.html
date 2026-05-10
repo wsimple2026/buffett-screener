@@ -957,10 +957,18 @@ function loadCacheFromStorage() {
 
 function saveCache(ticker, data) {
   analysisCache[ticker] = data;
-  localStorage.setItem('buffett_analysis_' + ticker, JSON.stringify(data));
+  try { localStorage.setItem('buffett_analysis_' + ticker, JSON.stringify(data)); } catch(e) {}
 }
 
-loadCacheFromStorage();
+// Load saved analyses into cache on startup
+(function loadCacheFromStorage() {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('buffett_analysis_'));
+  keys.forEach(k => {
+    const ticker = k.replace('buffett_analysis_', '');
+    try { analysisCache[ticker] = JSON.parse(localStorage.getItem(k)); } catch(e) {}
+  });
+  console.log('Cache loaded:', Object.keys(analysisCache));
+})();
 
 function rotateQuote() {
   const el = document.getElementById('quoteStrip');
