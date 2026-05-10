@@ -4,7 +4,7 @@ An AI-powered investment screener that analyzes companies through Warren Buffett
 
 ## Live Demo
 
-🔗 [your-username.github.io/buffett-screener](https://your-username.github.io/buffett-screener)
+🔗 [wsimple2026.github.io/buffett-screener](https://your-username.github.io/buffett-screener)
 
 ---
 
