@@ -1758,9 +1758,12 @@ async function removeFromSupabase(ticker) {
 
 // Check session on load
 supabase.auth.getSession().then(({ data: { session } }) => {
+  console.log('Session check:', session);
   if (session) {
+    console.log('Found session, signing in');
     onSignedIn(session.user);
   } else {
+    console.log('No session, showing login');
     document.getElementById('authOverlay').style.display = 'flex';
   }
 });
