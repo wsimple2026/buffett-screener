@@ -1160,9 +1160,24 @@ function loadCacheFromStorage() {
   });
 }
 
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in ms
+
 function saveCache(ticker, data) {
+  const entry = { data, savedAt: Date.now() };
   analysisCache[ticker] = data;
-  try { localStorage.setItem('buffett_analysis_' + ticker, JSON.stringify(data)); } catch(e) {}
+  try { localStorage.setItem('buffett_analysis_' + ticker, JSON.stringify(entry)); } catch(e) {}
+}
+
+function isCacheValid(ticker) {
+  if (!analysisCache[ticker]) return false;
+  try {
+    const raw = localStorage.getItem('buffett_analysis_' + ticker);
+    if (!raw) return false;
+    const entry = JSON.parse(raw);
+    // Support both old format (no savedAt) and new format
+    if (!entry.savedAt) return false;
+    return (Date.now() - entry.savedAt) < CACHE_TTL;
+  } catch(e) { return false; }
 }
 
 // Load saved analyses into cache on startup
@@ -1170,7 +1185,19 @@ function saveCache(ticker, data) {
   const keys = Object.keys(localStorage).filter(k => k.startsWith('buffett_analysis_'));
   keys.forEach(k => {
     const ticker = k.replace('buffett_analysis_', '');
-    try { analysisCache[ticker] = JSON.parse(localStorage.getItem(k)); } catch(e) {}
+    try {
+      const entry = JSON.parse(localStorage.getItem(k));
+      // Support both old format (raw data) and new format (with savedAt)
+      const data = entry.savedAt ? entry.data : entry;
+      const savedAt = entry.savedAt || 0;
+      if (Date.now() - savedAt < CACHE_TTL) {
+        analysisCache[ticker] = data;
+      } else {
+        // Expired — remove from localStorage
+        localStorage.removeItem(k);
+        console.log('Cache expired for:', ticker);
+      }
+    } catch(e) {}
   });
   console.log('Cache loaded:', Object.keys(analysisCache));
 })();
@@ -1193,8 +1220,8 @@ async function analyzeCompany() {
   const ticker = input.value.trim().toUpperCase();
   if (!ticker) return;
 
-  // If already cached (same or different ticker), load instantly
-  if (analysisCache[ticker]) {
+  // If already cached and not expired, load instantly
+  if (isCacheValid(ticker)) {
     currentTicker = ticker;
     qaHistory = [];
     document.getElementById('welcomePanel').style.display = 'none';
