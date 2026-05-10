@@ -942,7 +942,8 @@ const QUOTES = [
 let watchlist = JSON.parse(localStorage.getItem('buffett_watchlist') || '[]');
 let currentTicker = null;
 let qaHistory = [];
-const analysisCache = {}; // session cache — cleared on page refresh
+const analysisCache = JSON.parse(localStorage.getItem('buffett_cache') || '{}');
+function saveCache() { localStorage.setItem('buffett_cache', JSON.stringify(analysisCache)); }
 
 function rotateQuote() {
   const el = document.getElementById('quoteStrip');
@@ -1016,7 +1017,8 @@ async function analyzeCompany() {
     const response = await callClaude(prompt);
     clearInterval(stepTimer);
     const data = parseAnalysis(response);
-    analysisCache[ticker] = data; // save to session cache
+    analysisCache[ticker] = data; // save to cache
+    saveCache();
     renderAnalysis(ticker, data);
     addToWatchlist(ticker, data);
   } catch(e) {
@@ -1039,6 +1041,7 @@ async function callClaude(prompt) {
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 2500,
+      temperature: 0,
       system: 'You are a financial analyst. Output ONLY raw JSON. No ```json, no ```, no markdown, no explanation. First character must be { and last character must be }.',
       messages: [{ role: 'user', content: prompt }]
     })
