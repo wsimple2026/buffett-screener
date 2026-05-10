@@ -1046,7 +1046,7 @@ async function callClaude(prompt) {
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1500,
-      system: 'You are a financial analyst. Respond with ONLY a single valid JSON object — no markdown fences, no preamble, no explanation, no text before or after. Start with { and end with }. Never truncate.',
+      system: 'You are a financial analyst. Output ONLY raw JSON. No ```json, no ```, no markdown, no explanation. First character must be { and last character must be }.',
       messages: [{ role: 'user', content: prompt }]
     })
   });
@@ -1068,7 +1068,11 @@ async function callClaude(prompt) {
 
 function parseAnalysis(text) {
   try {
-    const clean = text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+    // Strip all markdown fences and whitespace aggressively
+    const clean = text
+      .replace(/```json/gi, '')
+      .replace(/```/g, '')
+      .trim();
     const start = clean.indexOf('{');
     const end = clean.lastIndexOf('}');
     if (start === -1 || end === -1 || end <= start) throw new Error('No JSON found');
