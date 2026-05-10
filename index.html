@@ -1799,15 +1799,19 @@ async function removeFromSupabase(ticker) {
 }
 
 // Check session on load
-sb.auth.getSession().then(({ data: { session } }) => {
-  console.log('Session check:', session);
-  if (session) {
-    console.log('Found session, signing in');
-    onSignedIn(session.user);
-  } else {
-    console.log('No session, showing login');
-    document.getElementById('authOverlay').style.display = 'flex';
-  }
+document.addEventListener('DOMContentLoaded', () => {
+  sb.auth.getSession().then(({ data: { session } }) => {
+    console.log('Session check:', session);
+    if (session) {
+      console.log('Found session, signing in');
+      onSignedIn(session.user);
+    } else {
+      console.log('No session, showing login');
+      const overlay = document.getElementById('authOverlay');
+      if (overlay) overlay.style.display = 'flex';
+      else console.error('authOverlay not found!');
+    }
+  });
 });
 
 sb.auth.onAuthStateChange((_event, session) => {
@@ -1820,5 +1824,5 @@ document.getElementById('tickerInput').addEventListener('keydown', e => {
 });
 </script>
 
-</body></body>
+</body>
 </html>
