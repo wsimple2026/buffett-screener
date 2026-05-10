@@ -1792,8 +1792,13 @@ function onSignedIn(user) {
 }
 
 async function signOut() {
-  await window._sb.auth.signOut();
+  try {
+    if (window._sb) await window._sb.auth.signOut();
+  } catch(e) {
+    console.error('Sign out error:', e);
+  }
   currentUser = null;
+  localStorage.clear();
   location.reload();
 }
 
