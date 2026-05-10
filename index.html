@@ -1209,10 +1209,14 @@ async function analyzeCompany() {
   }, 2200);
 
   try {
-    const prompt = buildAnalysisPrompt(ticker);
-    const response = await callClaude(prompt);
+    const [r1, r2] = await Promise.all([
+      callClaude(buildPrompt1(ticker)),
+      callClaude(buildPrompt2(ticker))
+    ]);
     clearInterval(stepTimer);
-    const data = parseAnalysis(response);
+    const d1 = parseAnalysis(r1);
+    const d2 = parseAnalysis(r2);
+    const data = { ...d1, ...d2 };
     saveCache(ticker, data);
     renderAnalysis(ticker, data);
     addToWatchlist(ticker, data);
@@ -1224,9 +1228,14 @@ async function analyzeCompany() {
   document.getElementById('analyzeBtn').disabled = false;
 }
 
-function buildAnalysisPrompt(ticker) {
-  return `Analyze ${ticker} as Warren Buffett's analyst. Raw JSON only. Max 10 words per string. Exactly 2 bullets per array.
-{"company_name":"","ticker":"${ticker}","sector":"","one_liner":"","buffett_score":0,"verdict":"BUY|WATCH|AVOID","runway_score":0,"runway_horizon":"LONG|MEDIUM|SHORT","runway_description":"","runway_bullets":["",""],"runway_concerns":["",""],"moat_score":0,"moat_width":"WIDE|NARROW|NONE","moat_description":"","moat_bullets":["",""],"management_score":0,"management_bullets":["",""],"management_concerns":["",""],"financials_score":0,"financials_bullets":["",""],"financials_concerns":["",""],"value_score":0,"value_bullets":["",""],"value_concerns":["",""],"intrinsic_value_low":0,"intrinsic_value_high":0,"current_price_est":0,"margin_of_safety_pct":0,"pe_ratio":0,"pe_buffett_view":"GOOD|NEUTRAL|EXPENSIVE","roe":0,"roe_buffett_view":"GOOD|NEUTRAL|BAD","debt_equity":0,"debt_buffett_view":"GOOD|NEUTRAL|BAD","fcf_yield":0,"fcf_buffett_view":"GOOD|NEUTRAL|BAD","revenue_growth_5yr":0,"net_margin":0,"dividend_yield":0,"buffett_narrative":"3 sentences max","key_risks":["",""],"watch_metrics":["",""],"buffett_quote_paraphrase":""}`;
+function buildPrompt1(ticker) {
+  return `Analyze ${ticker} as Warren Buffett's analyst. Raw JSON only, no markdown. Max 10 words per string. Exactly 2 bullets per array.
+{"company_name":"","ticker":"${ticker}","sector":"","one_liner":"","buffett_score":0,"verdict":"BUY|WATCH|AVOID","runway_score":0,"runway_horizon":"LONG|MEDIUM|SHORT","runway_description":"","runway_bullets":["",""],"runway_concerns":["",""],"moat_score":0,"moat_width":"WIDE|NARROW|NONE","moat_description":"","moat_bullets":["",""],"management_score":0,"management_bullets":["",""],"management_concerns":["",""]}`;
+}
+
+function buildPrompt2(ticker) {
+  return `Continue analyzing ${ticker} as Warren Buffett's analyst. Raw JSON only, no markdown. Max 10 words per string. Exactly 2 bullets per array.
+{"financials_score":0,"financials_bullets":["",""],"financials_concerns":["",""],"value_score":0,"value_bullets":["",""],"value_concerns":["",""],"intrinsic_value_low":0,"intrinsic_value_high":0,"current_price_est":0,"margin_of_safety_pct":0,"pe_ratio":0,"pe_buffett_view":"GOOD|NEUTRAL|EXPENSIVE","roe":0,"roe_buffett_view":"GOOD|NEUTRAL|BAD","debt_equity":0,"debt_buffett_view":"GOOD|NEUTRAL|BAD","fcf_yield":0,"fcf_buffett_view":"GOOD|NEUTRAL|BAD","revenue_growth_5yr":0,"net_margin":0,"dividend_yield":0,"buffett_narrative":"3 sentences","key_risks":["",""],"watch_metrics":["",""],"buffett_quote_paraphrase":""}`;
 }
 
 async function callClaude(prompt) {
