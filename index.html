@@ -6,6 +6,177 @@
 <title>Buffett Screen — Value Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<style>
+  /* AUTH MODAL */
+  .auth-overlay {
+    position: fixed; inset: 0;
+    background: rgba(26,18,9,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+  }
+  .auth-modal {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2.5rem;
+    width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .auth-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold2);
+    margin-bottom: 4px;
+  }
+  .auth-sub {
+    font-size: 12px;
+    color: var(--ink3);
+    margin-bottom: 24px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+  }
+  .auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .auth-tab {
+    flex: 1;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Instrument Sans', sans-serif;
+    border: none;
+    cursor: pointer;
+    background: var(--paper2);
+    color: var(--ink3);
+    transition: background 0.2s, color 0.2s;
+  }
+  .auth-tab.active {
+    background: var(--ink);
+    color: var(--gold2);
+  }
+  .auth-field {
+    margin-bottom: 14px;
+  }
+  .auth-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 5px;
+    display: block;
+  }
+  .auth-input {
+    width: 100%;
+    background: var(--paper2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 10px 12px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .auth-input:focus { border-color: var(--gold); }
+  .auth-submit {
+    width: 100%;
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    border-radius: var(--r);
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Instrument Sans', sans-serif;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.2s;
+  }
+  .auth-submit:hover { background: var(--gold2); }
+  .auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+  .auth-error {
+    font-size: 12px;
+    color: var(--red);
+    margin-top: 10px;
+    text-align: center;
+  }
+  .auth-success {
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 10px;
+    text-align: center;
+  }
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0;
+    color: var(--ink3);
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+  }
+  .auth-divider::before, .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .btn-google {
+    width: 100%;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Instrument Sans', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--ink);
+    transition: background 0.2s, border-color 0.2s;
+    margin-bottom: 4px;
+  }
+  .btn-google:hover { background: var(--paper2); border-color: var(--gold); }
+  .google-icon { width: 18px; height: 18px; }
+  /* USER BAR */
+  .user-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink3);
+  }
+  .user-email {
+    color: var(--gold2);
+    font-size: 11px;
+  }
+  .btn-signout {
+    background: transparent;
+    border: 1px solid var(--ink3);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 10px;
+    color: var(--ink3);
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-signout:hover { border-color: var(--red); color: var(--red); }
+</style>
 <style>
   :root {
     --ink: #1a1209;
@@ -845,7 +1016,7 @@
     <span class="logo-main">Buffett Screen</span>
     <span class="logo-sub">Value Intelligence</span>
   </div>
-  <div class="header-right">
+  <div class="header-right" id="headerRight">
     <span><span class="status-dot"></span>AI-Powered Analysis</span>
   </div>
 </header>
@@ -1038,10 +1209,14 @@ async function analyzeCompany() {
   }, 2200);
 
   try {
-    const prompt = buildAnalysisPrompt(ticker);
-    const response = await callClaude(prompt);
+    const [r1, r2] = await Promise.all([
+      callClaude(buildPrompt1(ticker)),
+      callClaude(buildPrompt2(ticker))
+    ]);
     clearInterval(stepTimer);
-    const data = parseAnalysis(response);
+    const d1 = parseAnalysis(r1);
+    const d2 = parseAnalysis(r2);
+    const data = { ...d1, ...d2 };
     saveCache(ticker, data);
     renderAnalysis(ticker, data);
     addToWatchlist(ticker, data);
@@ -1053,9 +1228,14 @@ async function analyzeCompany() {
   document.getElementById('analyzeBtn').disabled = false;
 }
 
-function buildAnalysisPrompt(ticker) {
-  return `Analyze ${ticker} as Warren Buffett's analyst. Return raw JSON only, no markdown. Keep all string values short (max 15 words each). Bullets arrays: exactly 2 items each. buffett_narrative: 2 short sentences only.
-Schema: {"company_name":"","ticker":"${ticker}","sector":"","one_liner":"","buffett_score":0,"verdict":"BUY|WATCH|AVOID","runway_score":0,"runway_horizon":"LONG|MEDIUM|SHORT","runway_description":"","runway_bullets":["",""],"runway_concerns":["",""],"moat_score":0,"moat_width":"WIDE|NARROW|NONE","moat_description":"","moat_bullets":["",""],"management_score":0,"management_bullets":["",""],"management_concerns":["",""],"financials_score":0,"financials_bullets":["",""],"financials_concerns":["",""],"value_score":0,"value_bullets":["",""],"value_concerns":["",""],"intrinsic_value_low":0,"intrinsic_value_high":0,"current_price_est":0,"margin_of_safety_pct":0,"pe_ratio":0,"pe_buffett_view":"GOOD|NEUTRAL|EXPENSIVE","roe":0,"roe_buffett_view":"GOOD|NEUTRAL|BAD","debt_equity":0,"debt_buffett_view":"GOOD|NEUTRAL|BAD","fcf_yield":0,"fcf_buffett_view":"GOOD|NEUTRAL|BAD","revenue_growth_5yr":0,"net_margin":0,"dividend_yield":0,"buffett_narrative":"","key_risks":["",""],"watch_metrics":["","",""],"buffett_quote_paraphrase":""}`;
+function buildPrompt1(ticker) {
+  return `Analyze ${ticker} as Warren Buffett's analyst. Raw JSON only, no markdown. Max 10 words per string. Exactly 2 bullets per array.
+{"company_name":"","ticker":"${ticker}","sector":"","one_liner":"","buffett_score":0,"verdict":"BUY|WATCH|AVOID","runway_score":0,"runway_horizon":"LONG|MEDIUM|SHORT","runway_description":"","runway_bullets":["",""],"runway_concerns":["",""],"moat_score":0,"moat_width":"WIDE|NARROW|NONE","moat_description":"","moat_bullets":["",""],"management_score":0,"management_bullets":["",""],"management_concerns":["",""]}`;
+}
+
+function buildPrompt2(ticker) {
+  return `Continue analyzing ${ticker} as Warren Buffett's analyst. Raw JSON only, no markdown. Max 10 words per string. Exactly 2 bullets per array.
+{"financials_score":0,"financials_bullets":["",""],"financials_concerns":["",""],"value_score":0,"value_bullets":["",""],"value_concerns":["",""],"intrinsic_value_low":0,"intrinsic_value_high":0,"current_price_est":0,"margin_of_safety_pct":0,"pe_ratio":0,"pe_buffett_view":"GOOD|NEUTRAL|EXPENSIVE","roe":0,"roe_buffett_view":"GOOD|NEUTRAL|BAD","debt_equity":0,"debt_buffett_view":"GOOD|NEUTRAL|BAD","fcf_yield":0,"fcf_buffett_view":"GOOD|NEUTRAL|BAD","revenue_growth_5yr":0,"net_margin":0,"dividend_yield":0,"buffett_narrative":"3 sentences","key_risks":["",""],"watch_metrics":["",""],"buffett_quote_paraphrase":""}`;
 }
 
 async function callClaude(prompt) {
@@ -1064,7 +1244,7 @@ async function callClaude(prompt) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2500,
+      max_tokens: 1200,
       temperature: 0,
       system: 'You are a financial analyst. Output ONLY raw JSON. No ```json, no ```, no markdown, no explanation. First character must be { and last character must be }.',
       messages: [{ role: 'user', content: prompt }]
@@ -1429,6 +1609,7 @@ function addToWatchlist(ticker, data) {
   else watchlist.unshift(entry);
 
   localStorage.setItem('buffett_watchlist', JSON.stringify(watchlist));
+  saveToSupabase(ticker, data, entry); // sync to cloud
   renderWatchlist();
 }
 
@@ -1478,14 +1659,164 @@ function removeFromWatchlist(ticker, event) {
   event.stopPropagation();
   watchlist = watchlist.filter(w => w.ticker !== ticker);
   localStorage.setItem('buffett_watchlist', JSON.stringify(watchlist));
+  removeFromSupabase(ticker); // sync to cloud
   renderWatchlist();
 }
 
 // Init
+const sb = window.supabase.createClient('https://iokxmcizklrikljxjsyd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlva3htY2l6a2xyaWtsanhqc3lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NDA3ODIsImV4cCI6MjA5NDAxNjc4Mn0.LNT-9VkyKBnG3SSgaj1w5y2Fq1ddAfler488AR0bYeA');
+let currentUser = null;
+
+// AUTH FUNCTIONS
+function switchTab(tab) {
+  document.getElementById('tabSignin').classList.toggle('active', tab === 'signin');
+  document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+  document.getElementById('authSubmit').textContent = tab === 'signin' ? 'Sign In' : 'Create Account';
+  document.getElementById('authMsg').innerHTML = '';
+}
+
+async function submitAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const isSignin = document.getElementById('tabSignin').classList.contains('active');
+  const btn = document.getElementById('authSubmit');
+  const msg = document.getElementById('authMsg');
+
+  if (!email || !password) { msg.innerHTML = '<div class="auth-error">Please fill in all fields</div>'; return; }
+  btn.disabled = true;
+  btn.textContent = 'Please wait...';
+
+  const { data, error } = isSignin
+    ? await sb.auth.signInWithPassword({ email, password })
+    : await sb.auth.signUp({ email, password });
+
+  if (error) {
+    msg.innerHTML = `<div class="auth-error">${error.message}</div>`;
+    btn.disabled = false;
+    btn.textContent = isSignin ? 'Sign In' : 'Create Account';
+  } else if (!isSignin && !data.session) {
+    msg.innerHTML = '<div class="auth-success">Check your email to confirm your account!</div>';
+    btn.disabled = false;
+    btn.textContent = 'Create Account';
+  } else {
+    onSignedIn(data.user);
+  }
+}
+
+function onSignedIn(user) {
+  currentUser = user;
+  document.getElementById('authOverlay').style.display = 'none';
+  document.getElementById('headerRight').innerHTML = `
+    <div class="user-bar">
+      <span class="status-dot"></span>
+      <span class="user-email">${user.email}</span>
+      <button class="btn-signout" onclick="signOut()">Sign Out</button>
+    </div>
+  `;
+  loadUserWatchlist();
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  currentUser = null;
+  location.reload();
+}
+
+async function signInWithGoogle() {
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.href
+    }
+  });
+  if (error) {
+    document.getElementById('authMsg').innerHTML = `<div class="auth-error">${error.message}</div>`;
+  }
+}
+
+async function loadUserWatchlist() {
+  if (!currentUser) return;
+  const { data } = await sb.from('watchlist').select('*').eq('user_id', currentUser.id);
+  if (data && data.length) {
+    data.forEach(row => {
+      // Load into local watchlist and cache
+      const w = row.data;
+      analysisCache[row.ticker] = w.fullData || null;
+      const existing = watchlist.findIndex(x => x.ticker === row.ticker);
+      const entry = { ticker: row.ticker, name: w.name, score: w.score, verdict: w.verdict, moat: w.moat, mgmt: w.mgmt, fin: w.fin, val: w.val, runway: w.runway, updatedAt: w.updatedAt };
+      if (existing >= 0) watchlist[existing] = entry;
+      else watchlist.push(entry);
+    });
+    renderWatchlist();
+  }
+}
+
+async function saveToSupabase(ticker, data, entry) {
+  if (!currentUser) return;
+  await sb.from('watchlist').upsert({
+    user_id: currentUser.id,
+    ticker: ticker,
+    data: { ...entry, fullData: data }
+  }, { onConflict: 'user_id,ticker' });
+}
+
+async function removeFromSupabase(ticker) {
+  if (!currentUser) return;
+  await sb.from('watchlist').delete().eq('user_id', currentUser.id).eq('ticker', ticker);
+}
+
+// Check session on load
+sb.auth.getSession().then(({ data: { session } }) => {
+  console.log('Session check:', session);
+  if (session) {
+    console.log('Found session, signing in');
+    onSignedIn(session.user);
+  } else {
+    console.log('No session, showing login');
+    document.getElementById('authOverlay').style.display = 'flex';
+  }
+});
+
+sb.auth.onAuthStateChange((_event, session) => {
+  if (session) onSignedIn(session.user);
+});
+
 renderWatchlist();
 document.getElementById('tickerInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') analyzeCompany();
 });
 </script>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authOverlay" style="display:none;">
+  <div class="auth-modal">
+    <div class="auth-logo">🦉 Buffett Screen</div>
+    <div class="auth-sub">Value Intelligence Platform</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabSignin" onclick="switchTab('signin')">Sign In</button>
+      <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+    <div class="auth-field">
+      <label class="auth-label">Email</label>
+      <input class="auth-input" id="authEmail" type="email" placeholder="you@example.com" />
+    </div>
+    <div class="auth-field">
+      <label class="auth-label">Password</label>
+      <input class="auth-input" id="authPassword" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')submitAuth()" />
+    </div>
+    <button class="auth-submit" id="authSubmit" onclick="submitAuth()">Sign In</button>
+    <div id="authMsg"></div>
+    <div class="auth-divider">or</div>
+    <button class="btn-google" onclick="signInWithGoogle()">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Sign in with Google
+    </button>
+  </div>
+</div>
 </body>
 </html>
