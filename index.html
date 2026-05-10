@@ -1798,24 +1798,38 @@ async function removeFromSupabase(ticker) {
   await sb.from('watchlist').delete().eq('user_id', currentUser.id).eq('ticker', ticker);
 }
 
-// Check session on load — handles both normal load and Google OAuth redirect
+// Auth state listener — fires on login, logout, token refresh
 sb.auth.onAuthStateChange((_event, session) => {
-  console.log('Auth state change:', _event, session);
-  if (session && session.user) {
+  console.log('Auth event:', _event, session?.user?.email);
+  if (_event === 'SIGNED_IN' && session?.user) {
     onSignedIn(session.user);
+  } else if (_event === 'SIGNED_OUT') {
+    location.reload();
   }
 });
 
-window.addEventListener('load', () => {
-  sb.auth.getSession().then(({ data: { session } }) => {
-    console.log('Session check:', session);
-    if (session && session.user) {
-      onSignedIn(session.user);
-    } else {
-      const overlay = document.getElementById('authOverlay');
-      if (overlay) overlay.style.display = 'flex';
+// On page load — check for existing session or OAuth redirect
+window.addEventListener('load', async () => {
+  // Handle OAuth redirect (access_token in URL hash)
+  if (window.location.hash.includes('access_token')) {
+    const { data, error } = await sb.auth.getSession();
+    if (data?.session?.user) {
+      onSignedIn(data.session.user);
+      // Clean URL
+      history.replaceState(null, '', window.location.pathname);
+      return;
     }
-  });
+  }
+
+  // Check for existing session
+  const { data: { session } } = await sb.auth.getSession();
+  console.log('Session on load:', session?.user?.email);
+  if (session?.user) {
+    onSignedIn(session.user);
+  } else {
+    const overlay = document.getElementById('authOverlay');
+    if (overlay) overlay.style.display = 'flex';
+  }
 });
 
 renderWatchlist();
