@@ -1061,7 +1061,9 @@ async function callClaude(prompt) {
   if (!response.ok) throw new Error(data.error?.message || 'Server error: ' + response.status);
   if (data.error) throw new Error(data.error.message);
   if (!data.content || !Array.isArray(data.content)) throw new Error('Unexpected: ' + JSON.stringify(data).slice(0, 200));
-  const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+  // Extract text and strip markdown fences here before returning
+  const rawText = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+  const text = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
   if (!text) throw new Error('Empty response from AI');
   return text;
 }
