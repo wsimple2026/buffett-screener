@@ -1799,17 +1799,17 @@ async function removeFromSupabase(ticker) {
 }
 
 // Check session on load — handles both normal load and Google OAuth redirect
-document.addEventListener('DOMContentLoaded', () => {
-  sb.auth.onAuthStateChange((_event, session) => {
-    console.log('Auth state change:', _event, session);
-    if (session) {
-      onSignedIn(session.user);
-    }
-  });
+sb.auth.onAuthStateChange((_event, session) => {
+  console.log('Auth state change:', _event, session);
+  if (session && session.user) {
+    onSignedIn(session.user);
+  }
+});
 
+window.addEventListener('load', () => {
   sb.auth.getSession().then(({ data: { session } }) => {
     console.log('Session check:', session);
-    if (session) {
+    if (session && session.user) {
       onSignedIn(session.user);
     } else {
       const overlay = document.getElementById('authOverlay');
