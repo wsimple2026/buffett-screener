@@ -1770,15 +1770,6 @@ function onSignedIn(user) {
   currentUser = user;
   console.log('onSignedIn called for:', user.email);
 
-  // Clear local watchlist and cache — load fresh from Supabase for this user
-  watchlist = [];
-  Object.keys(localStorage).forEach(k => {
-    if (k.startsWith('buffett_analysis_') || k === 'buffett_watchlist') {
-      localStorage.removeItem(k);
-    }
-  });
-  Object.keys(analysisCache).forEach(k => delete analysisCache[k]);
-
   const overlay = document.getElementById('authOverlay');
   if (overlay) overlay.style.display = 'none';
 
@@ -1790,6 +1781,15 @@ function onSignedIn(user) {
       <button class="btn-signout" onclick="signOut()">Sign Out</button>
     </div>
   `;
+
+  // Clear local data and load fresh from Supabase
+  watchlist = [];
+  Object.keys(localStorage).forEach(k => {
+    if (k.startsWith('buffett_analysis_') || k === 'buffett_watchlist') {
+      localStorage.removeItem(k);
+    }
+  });
+  Object.keys(analysisCache).forEach(k => delete analysisCache[k]);
   loadUserWatchlist();
 }
 
