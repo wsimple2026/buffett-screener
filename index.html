@@ -962,13 +962,7 @@ async function analyzeCompany() {
   const ticker = input.value.trim().toUpperCase();
   if (!ticker) return;
 
-  // If same ticker and already cached, load instantly
-  if (currentTicker === ticker && analysisCache[ticker]) {
-    renderAnalysis(ticker, analysisCache[ticker]);
-    return;
-  }
-
-  // If different ticker but cached, load instantly without spinner
+  // If already cached (same or different ticker), load instantly
   if (analysisCache[ticker]) {
     currentTicker = ticker;
     qaHistory = [];
