@@ -969,21 +969,44 @@ async function analyzeCompany() {
   document.getElementById('analyzeBtn').disabled = true;
 
   const panel = document.getElementById('analysisPanel');
+  const steps = [
+    'Scanning industry runway & secular trends...',
+    'Assessing economic moat & competitive advantage...',
+    'Analyzing financial strength & owner earnings...',
+    'Evaluating management quality & capital allocation...',
+    'Calculating intrinsic value & margin of safety...',
+    'Writing Warren's take...'
+  ];
+  let stepIndex = 0;
   panel.innerHTML = `
     <div class="loading-panel">
       <div class="loading-spinner"></div>
       <div class="loading-ticker">${ticker}</div>
-      <div class="loading-text">Applying Buffett's principles to your company...<br>This may take a moment.</div>
+      <div class="loading-text" id="loadingText">${steps[0]}</div>
+      <div style="margin-top:16px;display:flex;gap:6px;justify-content:center;" id="stepDots">
+        ${steps.map((_,i) => `<div style="width:6px;height:6px;border-radius:50%;background:${i===0?'var(--gold)':'var(--paper3)'};transition:background 0.3s;" id="dot${i}"></div>`).join('')}
+      </div>
     </div>
   `;
+  const stepTimer = setInterval(() => {
+    stepIndex = (stepIndex + 1) % steps.length;
+    const el = document.getElementById('loadingText');
+    const dot = document.getElementById('dot' + stepIndex);
+    const prevDot = document.getElementById('dot' + ((stepIndex - 1 + steps.length) % steps.length));
+    if (el) { el.style.opacity = 0; setTimeout(() => { el.textContent = steps[stepIndex]; el.style.opacity = 1; }, 200); }
+    if (dot) dot.style.background = 'var(--gold)';
+    if (prevDot) prevDot.style.background = 'var(--paper3)';
+  }, 2200);
 
   try {
     const prompt = buildAnalysisPrompt(ticker);
     const response = await callClaude(prompt);
+    clearInterval(stepTimer);
     const data = parseAnalysis(response);
     renderAnalysis(ticker, data);
     addToWatchlist(ticker, data);
   } catch(e) {
+    clearInterval(stepTimer);
     panel.innerHTML = `<div class="loading-panel"><div style="color:var(--red);font-size:14px;">Error: ${e.message}</div></div>`;
   }
 
@@ -991,88 +1014,9 @@ async function analyzeCompany() {
 }
 
 function buildAnalysisPrompt(ticker) {
-  return `You are Warren Buffett's personal investment analyst. Analyze ${ticker} using Buffett's investment philosophy. Provide a comprehensive analysis in strict JSON format.
-
-Return ONLY valid JSON with this exact structure (no markdown, no explanation outside JSON):
-
-{
-  "company_name": "Full company name",
-  "ticker": "${ticker}",
-  "sector": "Sector name",
-  "one_liner": "One sentence describing what the company does",
-  "buffett_score": 78,
-  "verdict": "BUY|WATCH|AVOID",
-  "moat_score": 85,
-  "moat_width": "WIDE|NARROW|NONE",
-  "moat_description": "2-3 sentences on the economic moat in Buffett's language",
-  "management_score": 72,
-  "financials_score": 68,
-  "value_score": 61,
-  "intrinsic_value_low": 145,
-  "intrinsic_value_high": 185,
-  "current_price_est": 162,
-  "margin_of_safety_pct": 12,
-  "pe_ratio": 24.5,
-  "pe_buffett_view": "GOOD|NEUTRAL|EXPENSIVE",
-  "roe": 32.1,
-  "roe_buffett_view": "GOOD|NEUTRAL|BAD",
-  "debt_equity": 0.4,
-  "debt_buffett_view": "GOOD|NEUTRAL|BAD",
-  "fcf_yield": 4.2,
-  "fcf_buffett_view": "GOOD|NEUTRAL|BAD",
-  "revenue_growth_5yr": 8.5,
-  "net_margin": 22.3,
-  "dividend_yield": 1.8,
-  "moat_bullets": [
-    "Strong brand with 100+ year history commands pricing power",
-    "Distribution network spans 200 countries — impossible to replicate",
-    "Customer loyalty metrics consistently above industry average"
-  ],
-  "management_bullets": [
-    "CEO has been in role 10+ years with aligned incentives",
-    "Capital allocation history shows disciplined buybacks at attractive prices",
-    "Management communicates transparently with shareholders"
-  ],
-  "management_concerns": [
-    "Compensation packages are somewhat generous relative to peers"
-  ],
-  "financials_bullets": [
-    "ROE consistently above 20% for the past decade",
-    "Free cash flow conversion ratio above 90%",
-    "Revenue has compounded at 7-8% annually over 10 years"
-  ],
-  "financials_concerns": [
-    "Debt levels slightly elevated from recent acquisitions"
-  ],
-  "value_bullets": [
-    "Trading near intrinsic value with modest margin of safety"
-  ],
-  "value_concerns": [
-    "Multiple has expanded significantly; less margin for error",
-    "Market prices in much of the growth potential already"
-  ],
-  "runway_score": 74,
-  "runway_horizon": "LONG|MEDIUM|SHORT",
-  "runway_description": "2-3 sentences on the industry's growth runway and secular tailwinds or headwinds through Buffett's eyes — is this an industry he'd want to be in for 20+ years?",
-  "runway_bullets": [
-    "Addressable market expanding as emerging markets grow middle class",
-    "Product category shows consistent per-capita consumption growth over decades",
-    "Recurring, habitual demand insulated from economic cycles"
-  ],
-  "runway_concerns": [
-    "Category volumes are maturing in core developed markets"
-  ],
-  "buffett_narrative": "2-3 paragraphs (as a string) analyzing this company through Buffett's eyes — would he hold this forever? What would he say about the business at a Berkshire shareholder meeting? Be specific and use Buffett's folksy, direct communication style.",
-  "key_risks": [
-    "Regulatory risk in core markets could compress margins",
-    "Technology disruption threat from newer business models",
-    "Valuation leaves little room for disappointment"
-  ],
-  "watch_metrics": ["P/E Ratio", "Free Cash Flow", "ROE", "Revenue Growth"],
-  "buffett_quote_paraphrase": "A short sentence Buffett might say about this company specifically (not a real quote, just in his style)"
-}
-
-Use real data you know about ${ticker}. Be accurate with financial metrics based on recent available information. The buffett_score should be 0-100 and reflect a weighted average of moat (30%), management (20%), financials (20%), runway (15%), and valuation (15%). All scores are 0-100. Be intellectually honest — not every company deserves a high score.`;
+  return `Analyze ${ticker} as Warren Buffett's investment analyst. Return ONLY a JSON object, no markdown, no extra text. Use this exact schema:
+{"company_name":"","ticker":"${ticker}","sector":"","one_liner":"","buffett_score":0,"verdict":"BUY|WATCH|AVOID","runway_score":0,"runway_horizon":"LONG|MEDIUM|SHORT","runway_description":"","runway_bullets":[""],"runway_concerns":[""],"moat_score":0,"moat_width":"WIDE|NARROW|NONE","moat_description":"","moat_bullets":[""],"management_score":0,"management_bullets":[""],"management_concerns":[""],"financials_score":0,"financials_bullets":[""],"financials_concerns":[""],"value_score":0,"value_bullets":[""],"value_concerns":[""],"intrinsic_value_low":0,"intrinsic_value_high":0,"current_price_est":0,"margin_of_safety_pct":0,"pe_ratio":0,"pe_buffett_view":"GOOD|NEUTRAL|EXPENSIVE","roe":0,"roe_buffett_view":"GOOD|NEUTRAL|BAD","debt_equity":0,"debt_buffett_view":"GOOD|NEUTRAL|BAD","fcf_yield":0,"fcf_buffett_view":"GOOD|NEUTRAL|BAD","revenue_growth_5yr":0,"net_margin":0,"dividend_yield":0,"buffett_narrative":"2-3 paragraphs in Buffett's folksy voice","key_risks":[""],"watch_metrics":[""],"buffett_quote_paraphrase":""}
+Rules: buffett_score = moat×0.3 + management×0.2 + financials×0.2 + runway×0.15 + value×0.15. All scores 0-100. Use real data for ${ticker}. Be honest — not every company scores high. Each bullets array must have 2-3 specific items.`;
 }
 
 async function callClaude(prompt) {
@@ -1080,7 +1024,7 @@ async function callClaude(prompt) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-5',
       max_tokens: 4000,
       system: 'You are a financial analyst. Respond with ONLY a single valid JSON object — no markdown fences, no preamble, no explanation, no text before or after. Start with { and end with }. Never truncate.',
       messages: [{ role: 'user', content: prompt }]
@@ -1392,7 +1336,7 @@ async function askQuestion(question) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-5',
         max_tokens: 400,
         system: systemPrompt,
         messages: qaHistory
