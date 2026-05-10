@@ -996,7 +996,7 @@ async function analyzeCompany() {
     document.getElementById('analysisPanel').style.display = 'block';
     document.getElementById('analyzeBtn').disabled = false;
     renderAnalysis(ticker, analysisCache[ticker]);
-    renderWatchlist();
+    addToWatchlist(ticker, analysisCache[ticker]); // re-add if removed
     return;
   }
 
