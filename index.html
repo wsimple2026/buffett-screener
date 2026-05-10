@@ -1159,28 +1159,28 @@ function renderAnalysis(ticker, d) {
         <div class="score-bar-track"><div class="score-bar-fill" style="width:${d.buffett_score}%;background:${scoreColor(d.buffett_score)}"></div></div>
       </div>
       <div class="score-card">
+        <div class="score-card-label">Industry Runway</div>
+        <div class="score-card-number" style="color:${scoreColor(d.runway_score)}">${d.runway_score}</div>
+        <div class="score-card-sub">${scoreLabel(d.runway_score)}</div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${d.runway_score}%;background:${scoreColor(d.runway_score)}"></div></div>
+      </div>
+      <div class="score-card">
         <div class="score-card-label">Economic Moat</div>
         <div class="score-card-number" style="color:${scoreColor(d.moat_score)}">${d.moat_score}</div>
         <div class="score-card-sub">${scoreLabel(d.moat_score)}</div>
         <div class="score-bar-track"><div class="score-bar-fill" style="width:${d.moat_score}%;background:${scoreColor(d.moat_score)}"></div></div>
       </div>
       <div class="score-card">
-        <div class="score-card-label">Management</div>
-        <div class="score-card-number" style="color:${scoreColor(d.management_score)}">${d.management_score}</div>
-        <div class="score-card-sub">${scoreLabel(d.management_score)}</div>
-        <div class="score-bar-track"><div class="score-bar-fill" style="width:${d.management_score}%;background:${scoreColor(d.management_score)}"></div></div>
-      </div>
-      <div class="score-card">
-        <div class="score-card-label">Financials</div>
+        <div class="score-card-label">Financial Strength</div>
         <div class="score-card-number" style="color:${scoreColor(d.financials_score)}">${d.financials_score}</div>
         <div class="score-card-sub">${scoreLabel(d.financials_score)}</div>
         <div class="score-bar-track"><div class="score-bar-fill" style="width:${d.financials_score}%;background:${scoreColor(d.financials_score)}"></div></div>
       </div>
       <div class="score-card">
-        <div class="score-card-label">Industry Runway</div>
-        <div class="score-card-number" style="color:${scoreColor(d.runway_score)}">${d.runway_score}</div>
-        <div class="score-card-sub">${scoreLabel(d.runway_score)}</div>
-        <div class="score-bar-track"><div class="score-bar-fill" style="width:${d.runway_score}%;background:${scoreColor(d.runway_score)}"></div></div>
+        <div class="score-card-label">Management</div>
+        <div class="score-card-number" style="color:${scoreColor(d.management_score)}">${d.management_score}</div>
+        <div class="score-card-sub">${scoreLabel(d.management_score)}</div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${d.management_score}%;background:${scoreColor(d.management_score)}"></div></div>
       </div>
     </div>
 
@@ -1203,6 +1203,16 @@ function renderAnalysis(ticker, d) {
     </div>
 
     <div class="pillars-grid">
+      <div class="pillar-card" style="grid-column: 1 / -1; background: var(--green-bg); border-color: rgba(45,90,39,0.15);">
+        <div class="pillar-header">
+          <div class="pillar-title" style="color:var(--green);">🌱 Industry Runway &amp; Secular Tailwinds</div>
+          <span class="pillar-score" style="color:${scoreColor(d.runway_score)}">${d.runway_score}/100</span>
+        </div>
+        <ul class="pillar-items" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          ${renderBullets(d.runway_bullets, 'good')}
+          ${renderBullets(d.runway_concerns, 'warn')}
+        </ul>
+      </div>
       <div class="pillar-card">
         <div class="pillar-header">
           <div class="pillar-title">🏰 Moat &amp; Competitive Advantage</div>
@@ -1210,6 +1220,16 @@ function renderAnalysis(ticker, d) {
         </div>
         <ul class="pillar-items">
           ${renderBullets(d.moat_bullets, 'good')}
+        </ul>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-header">
+          <div class="pillar-title">📊 Financial Strength</div>
+          <span class="pillar-score" style="color:${scoreColor(d.financials_score)}">${d.financials_score}/100</span>
+        </div>
+        <ul class="pillar-items">
+          ${renderBullets(d.financials_bullets, 'good')}
+          ${renderBullets(d.financials_concerns, 'warn')}
         </ul>
       </div>
       <div class="pillar-card">
@@ -1224,32 +1244,12 @@ function renderAnalysis(ticker, d) {
       </div>
       <div class="pillar-card">
         <div class="pillar-header">
-          <div class="pillar-title">📊 Financial Fortress</div>
-          <span class="pillar-score" style="color:${scoreColor(d.financials_score)}">${d.financials_score}/100</span>
-        </div>
-        <ul class="pillar-items">
-          ${renderBullets(d.financials_bullets, 'good')}
-          ${renderBullets(d.financials_concerns, 'warn')}
-        </ul>
-      </div>
-      <div class="pillar-card">
-        <div class="pillar-header">
           <div class="pillar-title">💰 Valuation</div>
           <span class="pillar-score" style="color:${scoreColor(d.value_score)}">${d.value_score}/100</span>
         </div>
         <ul class="pillar-items">
           ${renderBullets(d.value_bullets, 'good')}
           ${renderBullets(d.value_concerns, 'bad')}
-        </ul>
-      </div>
-      <div class="pillar-card" style="grid-column: 1 / -1; background: var(--green-bg); border-color: rgba(45,90,39,0.15);">
-        <div class="pillar-header">
-          <div class="pillar-title" style="color:var(--green);">🌱 Industry Runway &amp; Secular Tailwinds</div>
-          <span class="pillar-score" style="color:${scoreColor(d.runway_score)}">${d.runway_score}/100</span>
-        </div>
-        <ul class="pillar-items" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          ${renderBullets(d.runway_bullets, 'good')}
-          ${renderBullets(d.runway_concerns, 'warn')}
         </ul>
       </div>
     </div>
