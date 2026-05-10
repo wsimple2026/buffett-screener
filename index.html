@@ -942,8 +942,25 @@ const QUOTES = [
 let watchlist = JSON.parse(localStorage.getItem('buffett_watchlist') || '[]');
 let currentTicker = null;
 let qaHistory = [];
-const analysisCache = JSON.parse(localStorage.getItem('buffett_cache') || '{}');
-function saveCache() { localStorage.setItem('buffett_cache', JSON.stringify(analysisCache)); }
+const analysisCache = {};
+
+// Load any previously saved analyses from localStorage into cache
+function loadCacheFromStorage() {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('buffett_analysis_'));
+  keys.forEach(k => {
+    const ticker = k.replace('buffett_analysis_', '');
+    try {
+      analysisCache[ticker] = JSON.parse(localStorage.getItem(k));
+    } catch(e) {}
+  });
+}
+
+function saveCache(ticker, data) {
+  analysisCache[ticker] = data;
+  localStorage.setItem('buffett_analysis_' + ticker, JSON.stringify(data));
+}
+
+loadCacheFromStorage();
 
 function rotateQuote() {
   const el = document.getElementById('quoteStrip');
@@ -1017,8 +1034,7 @@ async function analyzeCompany() {
     const response = await callClaude(prompt);
     clearInterval(stepTimer);
     const data = parseAnalysis(response);
-    analysisCache[ticker] = data; // save to cache
-    saveCache();
+    saveCache(ticker, data);
     renderAnalysis(ticker, data);
     addToWatchlist(ticker, data);
   } catch(e) {
