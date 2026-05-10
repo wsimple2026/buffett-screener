@@ -1759,7 +1759,7 @@ async function signInWithGoogle() {
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.href
+      redirectTo: window.location.origin
     }
   });
   if (error) {
@@ -1798,24 +1798,24 @@ async function removeFromSupabase(ticker) {
   await sb.from('watchlist').delete().eq('user_id', currentUser.id).eq('ticker', ticker);
 }
 
-// Check session on load
+// Check session on load — handles both normal load and Google OAuth redirect
 document.addEventListener('DOMContentLoaded', () => {
+  sb.auth.onAuthStateChange((_event, session) => {
+    console.log('Auth state change:', _event, session);
+    if (session) {
+      onSignedIn(session.user);
+    }
+  });
+
   sb.auth.getSession().then(({ data: { session } }) => {
     console.log('Session check:', session);
     if (session) {
-      console.log('Found session, signing in');
       onSignedIn(session.user);
     } else {
-      console.log('No session, showing login');
       const overlay = document.getElementById('authOverlay');
       if (overlay) overlay.style.display = 'flex';
-      else console.error('authOverlay not found!');
     }
   });
-});
-
-sb.auth.onAuthStateChange((_event, session) => {
-  if (session) onSignedIn(session.user);
 });
 
 renderWatchlist();
