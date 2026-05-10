@@ -6,7 +6,6 @@
 <title>Buffett Screen — Value Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="config.js"></script>
 <style>
   :root {
     --ink: #1a1209;
@@ -1077,9 +1076,9 @@ Use real data you know about ${ticker}. Be accurate with financial metrics based
 }
 
 async function callClaude(prompt) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await fetch('/.netlify/functions/claude', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': CONFIG.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-5',
       max_tokens: 4000,
@@ -1389,7 +1388,7 @@ async function askQuestion(question) {
   try {
     const systemPrompt = `You are Warren Buffett's analyst who has just completed a deep analysis of ${currentTicker}. Answer questions about this company through the lens of Buffett's investment philosophy — value investing, economic moats, management quality, and long-term holding. Be specific, insightful, and use Buffett's plain-spoken, folksy communication style. Keep answers to 2-4 sentences unless complexity demands more. Reference specific aspects of the business when possible.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/.netlify/functions/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
