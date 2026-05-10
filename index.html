@@ -1757,9 +1757,11 @@ async function removeFromSupabase(ticker) {
 }
 
 // Check session on load
-supabase.auth.getSession().then(( { data: { session } }) => {
+supabase.auth.getSession().then(({ data: { session } }) => {
   if (session) {
     onSignedIn(session.user);
+  } else {
+    document.getElementById('authOverlay').style.display = 'flex';
   }
 });
 
@@ -1774,7 +1776,7 @@ document.getElementById('tickerInput').addEventListener('keydown', e => {
 </script>
 
 <!-- AUTH MODAL -->
-<div class="auth-overlay" id="authOverlay">
+<div class="auth-overlay" id="authOverlay" style="display:none;">
   <div class="auth-modal">
     <div class="auth-logo">🦉 Buffett Screen</div>
     <div class="auth-sub">Value Intelligence Platform</div>
