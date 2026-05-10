@@ -1737,9 +1737,24 @@ async function submitAuth() {
 }
 
 function onSignedIn(user) {
+  if (currentUser?.id === user.id) return; // prevent double-call
   currentUser = user;
-  document.getElementById('authOverlay').style.display = 'none';
-  document.getElementById('headerRight').innerHTML = `
+  console.log('onSignedIn called for:', user.email);
+
+  // Clear local watchlist and cache — load fresh from Supabase for this user
+  watchlist = [];
+  Object.keys(localStorage).forEach(k => {
+    if (k.startsWith('buffett_analysis_') || k === 'buffett_watchlist') {
+      localStorage.removeItem(k);
+    }
+  });
+  Object.keys(analysisCache).forEach(k => delete analysisCache[k]);
+
+  const overlay = document.getElementById('authOverlay');
+  if (overlay) overlay.style.display = 'none';
+
+  const headerRight = document.getElementById('headerRight');
+  if (headerRight) headerRight.innerHTML = `
     <div class="user-bar">
       <span class="status-dot"></span>
       <span class="user-email">${user.email}</span>
@@ -1769,17 +1784,23 @@ async function signInWithGoogle() {
 
 async function loadUserWatchlist() {
   if (!currentUser) return;
-  const { data } = await sb.from('watchlist').select('*').eq('user_id', currentUser.id);
+  const { data, error } = await sb.from('watchlist').select('*').eq('user_id', currentUser.id);
+  console.log('Loaded watchlist from Supabase:', data, error);
   if (data && data.length) {
     data.forEach(row => {
-      // Load into local watchlist and cache
       const w = row.data;
-      analysisCache[row.ticker] = w.fullData || null;
-      const existing = watchlist.findIndex(x => x.ticker === row.ticker);
+      if (w.fullData) {
+        analysisCache[row.ticker] = w.fullData;
+        saveCache(row.ticker, w.fullData);
+      }
       const entry = { ticker: row.ticker, name: w.name, score: w.score, verdict: w.verdict, moat: w.moat, mgmt: w.mgmt, fin: w.fin, val: w.val, runway: w.runway, updatedAt: w.updatedAt };
+      const existing = watchlist.findIndex(x => x.ticker === row.ticker);
       if (existing >= 0) watchlist[existing] = entry;
       else watchlist.push(entry);
     });
+    localStorage.setItem('buffett_watchlist', JSON.stringify(watchlist));
+    renderWatchlist();
+  } else {
     renderWatchlist();
   }
 }
