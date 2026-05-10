@@ -16,8 +16,13 @@ exports.handler = async function(event) {
   try {
     const body = JSON.parse(event.body);
 
+    // Abort after 9 seconds to avoid Netlify 10s gateway timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 9000);
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
@@ -26,18 +31,23 @@ exports.handler = async function(event) {
       body: JSON.stringify(body)
     });
 
+    clearTimeout(timeout);
     const data = await response.json();
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
       body: JSON.stringify(data)
     };
   } catch (err) {
+    const isTimeout = err.name === 'AbortError';
     return {
-      statusCode: 500,
+      statusCode: isTimeout ? 504 : 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: { message: err.message } })
+      body: JSON.stringify({ error: { message: isTimeout ? 'Request timed out — try again' : err.message } })
     };
   }
 };
