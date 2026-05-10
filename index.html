@@ -1225,8 +1225,8 @@ async function analyzeCompany() {
 }
 
 function buildAnalysisPrompt(ticker) {
-  return `Analyze ${ticker} as Warren Buffett's analyst. Return raw JSON only, no markdown. Keep all string values short (max 15 words each). Bullets arrays: exactly 2 items each. buffett_narrative: 2 short sentences only.
-Schema: {"company_name":"","ticker":"${ticker}","sector":"","one_liner":"","buffett_score":0,"verdict":"BUY|WATCH|AVOID","runway_score":0,"runway_horizon":"LONG|MEDIUM|SHORT","runway_description":"","runway_bullets":["",""],"runway_concerns":["",""],"moat_score":0,"moat_width":"WIDE|NARROW|NONE","moat_description":"","moat_bullets":["",""],"management_score":0,"management_bullets":["",""],"management_concerns":["",""],"financials_score":0,"financials_bullets":["",""],"financials_concerns":["",""],"value_score":0,"value_bullets":["",""],"value_concerns":["",""],"intrinsic_value_low":0,"intrinsic_value_high":0,"current_price_est":0,"margin_of_safety_pct":0,"pe_ratio":0,"pe_buffett_view":"GOOD|NEUTRAL|EXPENSIVE","roe":0,"roe_buffett_view":"GOOD|NEUTRAL|BAD","debt_equity":0,"debt_buffett_view":"GOOD|NEUTRAL|BAD","fcf_yield":0,"fcf_buffett_view":"GOOD|NEUTRAL|BAD","revenue_growth_5yr":0,"net_margin":0,"dividend_yield":0,"buffett_narrative":"","key_risks":["",""],"watch_metrics":["","",""],"buffett_quote_paraphrase":""}`;
+  return `Analyze ${ticker} as Warren Buffett's analyst. Raw JSON only. Max 10 words per string. Exactly 2 bullets per array.
+{"company_name":"","ticker":"${ticker}","sector":"","one_liner":"","buffett_score":0,"verdict":"BUY|WATCH|AVOID","runway_score":0,"runway_horizon":"LONG|MEDIUM|SHORT","runway_description":"","runway_bullets":["",""],"runway_concerns":["",""],"moat_score":0,"moat_width":"WIDE|NARROW|NONE","moat_description":"","moat_bullets":["",""],"management_score":0,"management_bullets":["",""],"management_concerns":["",""],"financials_score":0,"financials_bullets":["",""],"financials_concerns":["",""],"value_score":0,"value_bullets":["",""],"value_concerns":["",""],"intrinsic_value_low":0,"intrinsic_value_high":0,"current_price_est":0,"margin_of_safety_pct":0,"pe_ratio":0,"pe_buffett_view":"GOOD|NEUTRAL|EXPENSIVE","roe":0,"roe_buffett_view":"GOOD|NEUTRAL|BAD","debt_equity":0,"debt_buffett_view":"GOOD|NEUTRAL|BAD","fcf_yield":0,"fcf_buffett_view":"GOOD|NEUTRAL|BAD","revenue_growth_5yr":0,"net_margin":0,"dividend_yield":0,"buffett_narrative":"3 sentences max","key_risks":["",""],"watch_metrics":["",""],"buffett_quote_paraphrase":""}`;
 }
 
 async function callClaude(prompt) {
@@ -1235,7 +1235,7 @@ async function callClaude(prompt) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 3000,
+      max_tokens: 2000,
       temperature: 0,
       system: 'You are a financial analyst. Output ONLY raw JSON. No ```json, no ```, no markdown, no explanation. First character must be { and last character must be }.',
       messages: [{ role: 'user', content: prompt }]
